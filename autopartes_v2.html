@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AutoPartes Pro</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f8f8f7;--surface:#ffffff;--border:#e5e4e0;--border2:#d0cfc9;
+  --text:#1a1a18;--text2:#6b6a65;--text3:#9b9a95;
+  --green:#0F6E56;--green-bg:#E1F5EE;--green-light:#1D9E75;
+  --red:#A32D2D;--red-bg:#FCEBEB;
+  --blue:#185FA5;--blue-bg:#E6F1FB;
+  --amber:#854F0B;--amber-bg:#FAEEDA;
+  --purple:#533AB7;--purple-bg:#EEEDFE;
+  --radius:8px;--radius-lg:12px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:var(--text);background:var(--bg);min-height:100vh}
+
+/* LOGIN */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh}
+.login-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:40px 36px;width:380px;box-shadow:0 4px 24px rgba(0,0,0,.07)}
+.login-logo{font-size:28px;margin-bottom:8px}
+.login-card h1{font-size:20px;font-weight:600;margin-bottom:4px}
+.login-card .sub{font-size:13px;color:var(--text2);margin-bottom:28px}
+.login-card label{font-size:12px;color:var(--text2);font-weight:500;display:block;margin-bottom:4px;margin-top:14px}
+.login-card input{width:100%;padding:9px 12px;border:0.5px solid var(--border2);border-radius:var(--radius);font-size:14px;background:var(--surface);color:var(--text);transition:border .15s}
+.login-card input:focus{outline:none;border-color:var(--green-light)}
+.login-card button{width:100%;margin-top:22px;padding:11px;background:var(--green-light);color:#fff;border:none;border-radius:var(--radius);font-size:14px;font-weight:500;cursor:pointer;transition:background .15s}
+.login-card button:hover{background:var(--green)}
+.login-error{font-size:12px;color:var(--red);margin-top:10px;padding:8px 12px;background:var(--red-bg);border-radius:var(--radius);display:none}
+
+/* LAYOUT */
+#app-screen{display:none;flex-direction:column;min-height:100vh}
+.topbar{background:var(--surface);border-bottom:0.5px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:54px;position:sticky;top:0;z-index:50}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.topbar h1{font-size:15px;font-weight:600}
+.role-badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
+.role-badge.admin{background:var(--purple-bg);color:var(--purple)}
+.role-badge.vendedor{background:var(--green-bg);color:var(--green)}
+.role-badge.almacenista{background:var(--amber-bg);color:var(--amber)}
+.user-info{display:flex;align-items:center;gap:8px}
+.user-avatar{width:30px;height:30px;border-radius:50%;background:var(--blue-bg);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+.user-name{font-size:13px;color:var(--text2)}
+.btn-logout{font-size:12px;color:var(--text2);background:none;border:0.5px solid var(--border2);border-radius:var(--radius);padding:5px 12px;cursor:pointer}
+.btn-logout:hover{background:var(--bg)}
+
+.nav{background:var(--surface);border-bottom:0.5px solid var(--border);padding:0 24px;display:flex;gap:2px;overflow-x:auto}
+.nav button{padding:14px 16px;font-size:13px;border:none;background:transparent;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s}
+.nav button.active{color:var(--green);border-bottom-color:var(--green);font-weight:500}
+.nav button:hover:not(.active){color:var(--text)}
+
+.content{padding:24px;flex:1;max-width:1200px;width:100%;margin:0 auto}
+.section{display:none}
+.section.active{display:block}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+@media(max-width:640px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+.stat-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px}
+.stat-card .lbl{font-size:11px;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+.stat-card .val{font-size:26px;font-weight:600}
+.val.green{color:var(--green)}
+.val.red{color:var(--red)}
+.val.blue{color:var(--blue)}
+
+/* CARDS */
+.card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);margin-bottom:16px;overflow:hidden}
+.card-header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:0.5px solid var(--border)}
+.card-header h3{font-size:14px;font-weight:500}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.toolbar input[type=text]{flex:1;min-width:180px;padding:8px 12px;border:0.5px solid var(--border2);border-radius:var(--radius);font-size:13px;background:var(--surface);color:var(--text)}
+.toolbar select{padding:8px 12px;border:0.5px solid var(--border2);border-radius:var(--radius);font-size:13px;background:var(--surface);color:var(--text)}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:9px 16px;font-size:11px;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;background:#fafaf9}
+td{padding:10px 16px;border-bottom:0.5px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafaf9}
+
+/* PILLS */
+.pill{display:inline-block;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500;white-space:nowrap}
+.pill.stock{background:var(--green-bg);color:var(--green)}
+.pill.vendido{background:var(--red-bg);color:var(--red)}
+.pill.reservado{background:var(--amber-bg);color:var(--amber)}
+.pill.patio{background:var(--blue-bg);color:var(--blue)}
+.pill.venta{background:var(--green-bg);color:var(--green)}
+.pill.egreso{background:var(--red-bg);color:var(--red)}
+.pill.admin{background:var(--purple-bg);color:var(--purple)}
+.pill.vendedor{background:var(--green-bg);color:var(--green)}
+.pill.almacenista{background:var(--amber-bg);color:var(--amber)}
+.pill.activo{background:var(--green-bg);color:var(--green)}
+.pill.inactivo{background:var(--red-bg);color:var(--red)}
+
+/* BUTTONS */
+.btn{padding:8px 14px;font-size:13px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;transition:background .15s}
+.btn:hover{background:var(--bg)}
+.btn.primary{background:var(--green-light);color:#fff;border-color:var(--green-light)}
+.btn.primary:hover{background:var(--green)}
+.btn.sm{padding:5px 10px;font-size:12px}
+.btn.danger{color:var(--red);border-color:var(--border)}
+.btn.danger:hover{background:var(--red-bg)}
+
+/* CODE */
+.code{font-family:monospace;font-size:11px;background:var(--blue-bg);color:var(--blue);padding:3px 8px;border-radius:4px;font-weight:600}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;padding:16px}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--radius-lg);border:0.5px solid var(--border);padding:24px;width:520px;max-width:100%;max-height:90vh;overflow-y:auto}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:4px}
+.modal .msub{font-size:12px;color:var(--text2);margin-bottom:18px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.form-row.three{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:480px){.form-row,.form-row.three{grid-template-columns:1fr}}
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.fg label{font-size:12px;color:var(--text2);font-weight:500}
+.fg input,.fg select,.fg textarea{padding:8px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);font-size:13px;background:var(--surface);color:var(--text)}
+.fg textarea{resize:vertical}
+.modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:16px;border-top:0.5px solid var(--border)}
+.auto-code{font-size:12px;color:var(--text2);margin-bottom:16px;padding:8px 12px;background:var(--bg);border-radius:var(--radius);display:flex;align-items:center;gap:8px}
+
+/* MISC */
+.empty{text-align:center;color:var(--text3);padding:40px;font-size:13px}
+.loading{text-align:center;color:var(--text3);padding:32px;font-size:13px}
+.amount-pos{color:var(--green);font-weight:600}
+.amount-neg{color:var(--red);font-weight:600}
+.suc-tag{font-size:11px;background:var(--bg);border:0.5px solid var(--border);border-radius:4px;padding:2px 8px;color:var(--text2)}
+.divider{height:0.5px;background:var(--border);margin:16px 0}
+.page-title{font-size:18px;font-weight:600;margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--text2);margin-bottom:20px}
+.accion-row{display:flex;gap:6px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">🔧</div>
+    <h1>AutoPartes Pro</h1>
+    <p class="sub">Inicia sesión con tu usuario</p>
+    <label>Usuario</label>
+    <input type="text" id="login-user" placeholder="usuario" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <label>Contraseña</label>
+    <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <div class="login-error" id="login-error">Usuario o contraseña incorrectos</div>
+    <button onclick="doLogin()">Entrar</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>🔧 AutoPartes Pro</h1>
+      <span class="role-badge" id="role-badge"></span>
+    </div>
+    <div class="user-info">
+      <div class="user-avatar" id="user-avatar"></div>
+      <span class="user-name" id="user-name"></span>
+      <button class="btn-logout" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+  <div class="nav" id="main-nav">
+    <button class="active" onclick="showTab('dashboard',this)">Resumen</button>
+    <button id="nav-vehiculos" onclick="showTab('vehiculos',this)">Vehículos</button>
+    <button id="nav-refacciones" onclick="showTab('refacciones',this)">Refacciones</button>
+    <button id="nav-ventas" onclick="showTab('ventas',this)">Ventas</button>
+    <button id="nav-egresos" onclick="showTab('egresos',this)" style="display:none">Egresos</button>
+    <button id="nav-usuarios" onclick="showTab('usuarios',this)" style="display:none">Usuarios</button>
+  </div>
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div id="tab-dashboard" class="section active">
+      <p class="page-title">Resumen</p>
+      <p class="page-sub" id="dash-sub"></p>
+      <div class="stats-grid" id="dash-stats">
+        <div class="stat-card"><div class="lbl">Vehículos en patio</div><div class="val blue" id="st-veh">—</div></div>
+        <div class="stat-card"><div class="lbl">Refacciones</div><div class="val blue" id="st-ref">—</div></div>
+        <div class="stat-card" id="st-ven-card"><div class="lbl">Ventas del mes</div><div class="val green" id="st-ven">—</div></div>
+        <div class="stat-card" id="st-egr-card"><div class="lbl">Egresos del mes</div><div class="val red" id="st-egr">—</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Últimas transacciones</h3></div>
+        <div class="tbl-wrap">
+          <table><thead><tr><th>Folio</th><th>Descripción</th><th>Tipo</th><th>Monto</th><th>Fecha</th></tr></thead>
+          <tbody id="tb-recent"><tr><td colspan="5" class="loading">Cargando…</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- VEHÍCULOS -->
+    <div id="tab-vehiculos" class="section">
+      <p class="page-title">Vehículos en patio</p>
+      <p class="page-sub">Inventario de unidades por sucursal</p>
+      <div class="toolbar">
+        <input type="text" placeholder="Buscar vehículo…" oninput="filterTable('vehiculos',this.value)"/>
+        <select id="filter-veh-suc" onchange="loadVehiculos()">
+          <option value="all">Todas las sucursales</option>
+        </select>
+        <button class="btn primary" id="btn-add-veh" onclick="openModal('m-vehiculo')">+ Agregar</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table><thead><tr><th>Código</th><th>Sucursal</th><th>Marca / Modelo</th><th>Año</th><th>Color</th><th>Costo adq.</th><th>Condición</th><th>Estado</th></tr></thead>
+          <tbody id="tb-vehiculos"><tr><td colspan="8" class="loading">Cargando…</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- REFACCIONES -->
+    <div id="tab-refacciones" class="section">
+      <p class="page-title">Refacciones</p>
+      <p class="page-sub">Piezas almacenadas disponibles</p>
+      <div class="toolbar">
+        <input type="text" placeholder="Buscar refacción…" oninput="filterTable('refacciones',this.value)"/>
+        <select id="filter-ref-suc" onchange="loadRefacciones()">
+          <option value="all">Todas las sucursales</option>
+        </select>
+        <button class="btn primary" id="btn-add-ref" onclick="openModal('m-refaccion')">+ Agregar</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table><thead><tr><th>Código</th><th>Sucursal</th><th>Descripción</th><th>Categoría</th><th>Origen</th><th>Precio</th><th>Stock</th><th>Estado</th></tr></thead>
+          <tbody id="tb-refacciones"><tr><td colspan="8" class="loading">Cargando…</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- VENTAS -->
+    <div id="tab-ventas" class="section">
+      <p class="page-title">Ventas</p>
+      <p class="page-sub" id="ventas-sub"></p>
+      <div class="toolbar">
+        <input type="text" placeholder="Buscar venta…" oninput="filterTable('ventas',this.value)"/>
+        <button class="btn primary" onclick="openModal('m-venta')">+ Registrar venta</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table><thead><tr><th>Folio</th><th>Sucursal</th><th>Artículo</th><th>Cliente</th><th>Monto</th><th>Método pago</th><th>Fecha</th></tr></thead>
+          <tbody id="tb-ventas"><tr><td colspan="7" class="loading">Cargando…</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- EGRESOS (admin/contador) -->
+    <div id="tab-egresos" class="section">
+      <p class="page-title">Egresos</p>
+      <p class="page-sub" id="egresos-sub"></p>
+      <div class="toolbar">
+        <input type="text" placeholder="Buscar egreso…" oninput="filterTable('egresos',this.value)"/>
+        <button class="btn primary" onclick="openModal('m-egreso')">+ Registrar egreso</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table><thead><tr><th>Folio</th><th>Sucursal</th><th>Concepto</th><th>Categoría</th><th>Monto</th><th>Método pago</th><th>Fecha</th></tr></thead>
+          <tbody id="tb-egresos"><tr><td colspan="7" class="loading">Cargando…</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- USUARIOS (solo admin) -->
+    <div id="tab-usuarios" class="section">
+      <p class="page-title">Gestión de usuarios</p>
+      <p class="page-sub">Administra accesos, roles y sucursales</p>
+      <div class="toolbar">
+        <input type="text" placeholder="Buscar usuario…" oninput="filterTable('usuarios',this.value)"/>
+        <button class="btn primary" onclick="openModal('m-usuario')">+ Nuevo usuario</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table><thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Sucursal</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody id="tb-usuarios"><tr><td colspan="6" class="loading">Cargando…</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL VEHÍCULO -->
+<div class="overlay" id="m-vehiculo">
+  <div class="modal">
+    <h3>Registrar vehículo</h3>
+    <div class="msub">Código automático: <span class="code" id="pre-veh">VEH-001</span></div>
+    <div class="form-row three">
+      <div class="fg"><label>Marca *</label><input id="v-marca" placeholder="Nissan"/></div>
+      <div class="fg"><label>Modelo *</label><input id="v-modelo" placeholder="Sentra"/></div>
+      <div class="fg"><label>Año</label><input id="v-anio" type="number" placeholder="2015"/></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Color</label><input id="v-color" placeholder="Gris"/></div>
+      <div class="fg"><label>No. serie / VIN</label><input id="v-vin" placeholder="3N1AB7…"/></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Costo adquisición ($)</label><input id="v-costo" type="number" placeholder="5000"/></div>
+      <div class="fg"><label>Condición</label>
+        <select id="v-cond"><option>Completo</option><option>Partido</option><option>Para partes</option></select>
+      </div>
+    </div>
+    <div class="fg"><label>Notas</label><textarea id="v-notas" rows="2" placeholder="Daños, faltantes…"></textarea></div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('m-vehiculo')">Cancelar</button>
+      <button class="btn primary" onclick="saveVehiculo()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL REFACCIÓN -->
+<div class="overlay" id="m-refaccion">
+  <div class="modal">
+    <h3>Registrar refacción</h3>
+    <div class="msub">Código automático: <span class="code" id="pre-ref">REF-001</span></div>
+    <div class="form-row">
+      <div class="fg"><label>Descripción *</label><input id="r-desc" placeholder="Motor 1.8L completo"/></div>
+      <div class="fg"><label>Categoría</label>
+        <select id="r-cat"><option>Motor</option><option>Transmisión</option><option>Suspensión</option><option>Frenos</option><option>Eléctrico</option><option>Carrocería</option><option>Interior</option><option>Otro</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Vehículo origen (código)</label><input id="r-origen" placeholder="VEH-001"/></div>
+      <div class="fg"><label>Ubicación en almacén</label><input id="r-ubic" placeholder="Estante A-3"/></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Precio de venta ($)</label><input id="r-precio" type="number" placeholder="800"/></div>
+      <div class="fg"><label>Stock</label><input id="r-stock" type="number" placeholder="1" value="1"/></div>
+    </div>
+    <div class="fg"><label>Estado</label>
+      <select id="r-estado"><option>En stock</option><option>Reservado</option><option>Vendido</option></select>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('m-refaccion')">Cancelar</button>
+      <button class="btn primary" onclick="saveRefaccion()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VENTA -->
+<div class="overlay" id="m-venta">
+  <div class="modal">
+    <h3>Registrar venta</h3>
+    <div class="msub">Folio automático: <span class="code" id="pre-ven">VTA-001</span></div>
+    <div class="form-row">
+      <div class="fg"><label>Artículo vendido *</label><input id="vt-art" placeholder="Motor (REF-001)"/></div>
+      <div class="fg"><label>Cliente</label><input id="vt-cli" placeholder="Nombre o empresa"/></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Monto ($) *</label><input id="vt-monto" type="number" placeholder="1200"/></div>
+      <div class="fg"><label>Método de pago</label>
+        <select id="vt-pago"><option>Efectivo</option><option>Transferencia</option><option>Tarjeta</option></select>
+      </div>
+    </div>
+    <div class="fg"><label>Notas</label><textarea id="vt-notas" rows="2" placeholder="Garantía, observaciones…"></textarea></div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('m-venta')">Cancelar</button>
+      <button class="btn primary" onclick="saveVenta()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EGRESO -->
+<div class="overlay" id="m-egreso">
+  <div class="modal">
+    <h3>Registrar egreso</h3>
+    <div class="msub">Folio automático: <span class="code" id="pre-egr">EGR-001</span></div>
+    <div class="form-row">
+      <div class="fg"><label>Concepto *</label><input id="eg-con" placeholder="Compra de vehículo, renta…"/></div>
+      <div class="fg"><label>Categoría</label>
+        <select id="eg-cat"><option>Compra de vehículo</option><option>Renta / local</option><option>Nómina</option><option>Servicios</option><option>Transporte</option><option>Herramientas</option><option>Otro</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Monto ($) *</label><input id="eg-monto" type="number" placeholder="3000"/></div>
+      <div class="fg"><label>Método de pago</label>
+        <select id="eg-pago"><option>Efectivo</option><option>Transferencia</option><option>Tarjeta</option></select>
+      </div>
+    </div>
+    <div class="fg"><label>Notas</label><textarea id="eg-notas" rows="2" placeholder="Proveedor, factura…"></textarea></div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('m-egreso')">Cancelar</button>
+      <button class="btn primary" onclick="saveEgreso()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL USUARIO -->
+<div class="overlay" id="m-usuario">
+  <div class="modal">
+    <h3 id="m-usuario-title">Nuevo usuario</h3>
+    <input type="hidden" id="u-id"/>
+    <div class="form-row">
+      <div class="fg"><label>Nombre completo *</label><input id="u-nombre" placeholder="Juan García"/></div>
+      <div class="fg"><label>Usuario (login) *</label><input id="u-user" placeholder="jgarcia"/></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Contraseña *</label><input id="u-pass" type="password" placeholder="Mínimo 4 caracteres"/></div>
+      <div class="fg"><label>Rol *</label>
+        <select id="u-rol">
+          <option value="vendedor">Vendedor</option>
+          <option value="almacenista">Almacenista</option>
+          <option value="admin">Administrador</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg"><label>Sucursal asignada</label>
+      <select id="u-suc">
+        <option value="">— Sin sucursal fija (acceso a todas) —</option>
+      </select>
+    </div>
+    <div class="fg"><label>Estado</label>
+      <select id="u-activo"><option value="true">Activo</option><option value="false">Inactivo</option></select>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('m-usuario')">Cancelar</button>
+      <button class="btn primary" onclick="saveUsuario()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPA_URL = 'https://ylgtbcuojjlwsekddhsn.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlsZ3RiY3Vvampsd3Nla2RkaHNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3OTQzMjAsImV4cCI6MjA5NzM3MDMyMH0.42ZUOfcm_M4hV_-eEViGDivemg_bbI-bMflYXqoIN98';
+const H = {'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=representation'};
+
+const db = async (table, method='GET', body=null, query='') => {
+  const r = await fetch(`${SUPA_URL}/rest/v1/${table}${query}`, {
+    method, headers: H, body: body ? JSON.stringify(body) : null
+  });
+  if(!r.ok){ const e = await r.text(); throw new Error(e); }
+  if(method==='DELETE' || r.status===204) return null;
+  return r.json();
+};
+
+const fmt = n => n != null ? '$' + Number(n).toLocaleString('es-MX') : '—';
+const fmtDate = s => s ? new Date(s).toLocaleDateString('es-MX') : '—';
+const pad = n => n.toString().padStart(3,'0');
+
+// Permisos por rol
+const PERMS = {
+  admin:       {egresos:true, usuarios:true, addVeh:true, addRef:true, verVentas:true, verTodo:true},
+  almacenista: {egresos:false, usuarios:false, addVeh:true, addRef:true, verVentas:false, verTodo:false},
+  vendedor:    {egresos:false, usuarios:false, addVeh:false, addRef:false, verVentas:true, verTodo:false},
+};
+
+let SESSION = null;
+let SUCURSALES = [];
+let DATA = {vehiculos:[], refacciones:[], ventas:[], egresos:[], usuarios:[]};
+
+// ── LOGIN ──────────────────────────────────────────────
+async function initApp(){
+  const sucs = await db('sucursales','GET',null,'?select=id,nombre&order=nombre');
+  SUCURSALES = sucs;
+  // Filtros de sucursal
+  ['filter-veh-suc','filter-ref-suc'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = '<option value="all">Todas las sucursales</option>' +
+      SUCURSALES.map(s=>`<option value="${s.id}">${s.nombre}</option>`).join('');
+  });
+  // Select de sucursal en modal usuario
+  const uSuc = document.getElementById('u-suc');
+  uSuc.innerHTML = '<option value="">— Sin sucursal fija —</option>' +
+    SUCURSALES.map(s=>`<option value="${s.id}">${s.nombre}</option>`).join('');
+}
+
+async function doLogin(){
+  const usuario = document.getElementById('login-user').value.trim();
+  const pass    = document.getElementById('login-pass').value;
+  const errEl   = document.getElementById('login-error');
+  errEl.style.display = 'none';
+  if(!usuario || !pass){ errEl.textContent='Completa usuario y contraseña'; errEl.style.display='block'; return; }
+  try{
+    const rows = await db('usuarios','GET',null,`?usuario=eq.${encodeURIComponent(usuario)}&password=eq.${encodeURIComponent(pass)}&activo=eq.true&select=*`);
+    if(!rows.length){ errEl.textContent='Usuario o contraseña incorrectos'; errEl.style.display='block'; return; }
+    SESSION = rows[0];
+    setupUI();
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display   = 'flex';
+    loadDashboard();
+  }catch(e){
+    errEl.textContent = 'Error de conexión. Verifica tu internet.';
+    errEl.style.display = 'block';
+  }
+}
+
+function doLogout(){
+  SESSION = null;
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app-screen').style.display   = 'none';
+  // Reset nav
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.nav button').classList.add('active');
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('tab-dashboard').classList.add('active');
+}
+
+function setupUI(){
+  const p = PERMS[SESSION.rol];
+  const initials = SESSION.nombre.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('user-avatar').textContent = initials;
+  document.getElementById('user-name').textContent   = SESSION.nombre;
+  const rb = document.getElementById('role-badge');
+  rb.textContent = SESSION.rol.charAt(0).toUpperCase() + SESSION.rol.slice(1);
+  rb.className   = `role-badge ${SESSION.rol}`;
+  // Nav visibility
+  document.getElementById('nav-egresos').style.display  = p.egresos   ? '' : 'none';
+  document.getElementById('nav-usuarios').style.display = p.usuarios  ? '' : 'none';
+  // Botones agregar
+  const bv = document.getElementById('btn-add-veh');
+  const br = document.getElementById('btn-add-ref');
+  if(bv) bv.style.display = p.addVeh ? '' : 'none';
+  if(br) br.style.display = p.addRef ? '' : 'none';
+  // Stats financieras
+  document.getElementById('st-ven-card').style.display = p.verVentas || p.egresos ? '' : 'none';
+  document.getElementById('st-egr-card').style.display = p.egresos ? '' : 'none';
+  // Subtítulo dashboard
+  const sname = SESSION.sucursal_id ? (SUCURSALES.find(s=>s.id===SESSION.sucursal_id)||{}).nombre||'' : 'Todas las sucursales';
+  document.getElementById('dash-sub').textContent = `${SESSION.nombre} · ${sname}`;
+}
+
+// ── TABS ───────────────────────────────────────────────
+function showTab(id, btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='dashboard')   loadDashboard();
+  else if(id==='vehiculos')   loadVehiculos();
+  else if(id==='refacciones') loadRefacciones();
+  else if(id==='ventas')      loadVentas();
+  else if(id==='egresos')     loadEgresos();
+  else if(id==='usuarios')    loadUsuarios();
+}
+
+// ── DASHBOARD ─────────────────────────────────────────
+async function loadDashboard(){
+  const p = PERMS[SESSION.rol];
+  // Filtro por sucursal del usuario
+  const sucFilter = SESSION.sucursal_id ? `&sucursal_id=eq.${SESSION.sucursal_id}` : '';
+  try{
+    const [veh, ref] = await Promise.all([
+      db('vehiculos','GET',null,`?select=id${sucFilter}`),
+      db('refacciones','GET',null,`?select=id${sucFilter}`)
+    ]);
+    document.getElementById('st-veh').textContent = veh.length;
+    document.getElementById('st-ref').textContent = ref.length;
+
+    if(p.verVentas || p.egresos){
+      const ven = await db('ventas','GET',null,`?select=monto,created_at${sucFilter}`);
+      const now = new Date();
+      const thisMonth = r => { const d=new Date(r.created_at); return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear(); };
+      document.getElementById('st-ven').textContent = fmt(ven.filter(thisMonth).reduce((s,r)=>s+Number(r.monto),0));
+    }
+    if(p.egresos){
+      const egr = await db('egresos','GET',null,`?select=monto,created_at${sucFilter}`);
+      const now = new Date();
+      const thisMonth = r => { const d=new Date(r.created_at); return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear(); };
+      document.getElementById('st-egr').textContent = fmt(egr.filter(thisMonth).reduce((s,r)=>s+Number(r.monto),0));
+    }
+
+    // Recientes
+    const recentQ = `?order=created_at.desc&limit=6${sucFilter}`;
+    const promises = [];
+    if(p.verVentas || p.egresos) promises.push(db('ventas','GET',null,recentQ));
+    else promises.push(Promise.resolve([]));
+    if(p.egresos) promises.push(db('egresos','GET',null,recentQ));
+    else promises.push(Promise.resolve([]));
+    const [rv, re] = await Promise.all(promises);
+
+    const all = [
+      ...rv.map(r=>({code:r.code, desc:r.articulo, tipo:'venta', monto:r.monto, fecha:r.created_at})),
+      ...re.map(r=>({code:r.code, desc:r.concepto, tipo:'egreso', monto:r.monto, fecha:r.created_at}))
+    ].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha)).slice(0,8);
+
+    const tb = document.getElementById('tb-recent');
+    if(!all.length){ tb.innerHTML='<tr><td colspan="5" class="empty">Sin transacciones aún</td></tr>'; return; }
+    tb.innerHTML = all.map(t=>`<tr>
+      <td><span class="code">${t.code}</span></td>
+      <td>${t.desc||'—'}</td>
+      <td><span class="pill ${t.tipo}">${t.tipo==='venta'?'Venta':'Egreso'}</span></td>
+      <td class="${t.tipo==='venta'?'amount-pos':'amount-neg'}">${t.tipo==='venta'?'+':'−'}${fmt(t.monto)}</td>
+      <td>${fmtDate(t.fecha)}</td>
+    </tr>`).join('');
+  }catch(e){ console.error(e); }
+}
+
+// ── VEHÍCULOS ─────────────────────────────────────────
+async function loadVehiculos(){
+  const suc = document.getElementById('filter-veh-suc')?.value || 'all';
+  const q = suc==='all' ? '?order=created_at.desc' : `?sucursal_id=eq.${suc}&order=created_at.desc`;
+  try{
+    const rows = await db('vehiculos','GET',null,q);
+    DATA.vehiculos = rows;
+    renderVehiculos(rows);
+    updateNextCode('vehiculos','VEH-','pre-veh');
+  }catch(e){ document.getElementById('tb-vehiculos').innerHTML='<tr><td colspan="8" class="empty">Error al cargar datos</td></tr>'; }
+}
+
+function renderVehiculos(rows){
+  const tb = document.getElementById('tb-vehiculos');
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="8" class="empty">Sin vehículos registrados</td></tr>'; return; }
+  tb.innerHTML = rows.map(v=>{
+    const sname = (SUCURSALES.find(s=>s.id===v.sucursal_id)||{}).nombre||'—';
+    return `<tr>
+      <td><span class="code">${v.code}</span></td>
+      <td><span class="suc-tag">${sname}</span></td>
+      <td>${v.marca||''} ${v.modelo||''}</td>
+      <td>${v.anio||'—'}</td>
+      <td>${v.color||'—'}</td>
+      <td>${fmt(v.costo)}</td>
+      <td>${v.condicion||'—'}</td>
+      <td><span class="pill patio">${v.estado||'En patio'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── REFACCIONES ───────────────────────────────────────
+async function loadRefacciones(){
+  const suc = document.getElementById('filter-ref-suc')?.value || 'all';
+  const q = suc==='all' ? '?order=created_at.desc' : `?sucursal_id=eq.${suc}&order=created_at.desc`;
+  try{
+    const rows = await db('refacciones','GET',null,q);
+    DATA.refacciones = rows;
+    renderRefacciones(rows);
+    updateNextCode('refacciones','REF-','pre-ref');
+  }catch(e){ document.getElementById('tb-refacciones').innerHTML='<tr><td colspan="8" class="empty">Error al cargar datos</td></tr>'; }
+}
+
+function renderRefacciones(rows){
+  const tb = document.getElementById('tb-refacciones');
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="8" class="empty">Sin refacciones registradas</td></tr>'; return; }
+  tb.innerHTML = rows.map(r=>{
+    const sname = (SUCURSALES.find(s=>s.id===r.sucursal_id)||{}).nombre||'—';
+    const pc = r.estado==='En stock'?'stock':r.estado==='Vendido'?'vendido':'reservado';
+    return `<tr>
+      <td><span class="code">${r.code}</span></td>
+      <td><span class="suc-tag">${sname}</span></td>
+      <td>${r.descripcion||'—'}</td>
+      <td>${r.categoria||'—'}</td>
+      <td>${r.origen_code||'—'}</td>
+      <td>${fmt(r.precio)}</td>
+      <td>${r.stock??'—'}</td>
+      <td><span class="pill ${pc}">${r.estado||'—'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── VENTAS ────────────────────────────────────────────
+async function loadVentas(){
+  const sucFilter = SESSION.sucursal_id ? `&sucursal_id=eq.${SESSION.sucursal_id}` : '';
+  try{
+    const rows = await db('ventas','GET',null,`?order=created_at.desc${sucFilter}`);
+    DATA.ventas = rows;
+    renderVentas(rows);
+    updateNextCode('ventas','VTA-','pre-ven');
+    const sname = SESSION.sucursal_id ? (SUCURSALES.find(s=>s.id===SESSION.sucursal_id)||{}).nombre : 'Todas las sucursales';
+    document.getElementById('ventas-sub').textContent = sname;
+  }catch(e){ document.getElementById('tb-ventas').innerHTML='<tr><td colspan="7" class="empty">Error al cargar datos</td></tr>'; }
+}
+
+function renderVentas(rows){
+  const tb = document.getElementById('tb-ventas');
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="7" class="empty">Sin ventas registradas</td></tr>'; return; }
+  tb.innerHTML = rows.map(v=>{
+    const sname = (SUCURSALES.find(s=>s.id===v.sucursal_id)||{}).nombre||'—';
+    return `<tr>
+      <td><span class="code">${v.code}</span></td>
+      <td><span class="suc-tag">${sname}</span></td>
+      <td>${v.articulo||'—'}</td>
+      <td>${v.cliente||'—'}</td>
+      <td class="amount-pos">${fmt(v.monto)}</td>
+      <td>${v.metodo_pago||'—'}</td>
+      <td>${fmtDate(v.created_at)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── EGRESOS ───────────────────────────────────────────
+async function loadEgresos(){
+  const sucFilter = SESSION.sucursal_id ? `&sucursal_id=eq.${SESSION.sucursal_id}` : '';
+  try{
+    const rows = await db('egresos','GET',null,`?order=created_at.desc${sucFilter}`);
+    DATA.egresos = rows;
+    renderEgresos(rows);
+    updateNextCode('egresos','EGR-','pre-egr');
+    const sname = SESSION.sucursal_id ? (SUCURSALES.find(s=>s.id===SESSION.sucursal_id)||{}).nombre : 'Todas las sucursales';
+    document.getElementById('egresos-sub').textContent = sname;
+  }catch(e){ document.getElementById('tb-egresos').innerHTML='<tr><td colspan="7" class="empty">Error al cargar datos</td></tr>'; }
+}
+
+function renderEgresos(rows){
+  const tb = document.getElementById('tb-egresos');
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="7" class="empty">Sin egresos registrados</td></tr>'; return; }
+  tb.innerHTML = rows.map(e=>{
+    const sname = (SUCURSALES.find(s=>s.id===e.sucursal_id)||{}).nombre||'—';
+    return `<tr>
+      <td><span class="code">${e.code}</span></td>
+      <td><span class="suc-tag">${sname}</span></td>
+      <td>${e.concepto||'—'}</td>
+      <td>${e.categoria||'—'}</td>
+      <td class="amount-neg">${fmt(e.monto)}</td>
+      <td>${e.metodo_pago||'—'}</td>
+      <td>${fmtDate(e.created_at)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── USUARIOS (solo admin) ─────────────────────────────
+async function loadUsuarios(){
+  try{
+    const rows = await db('usuarios','GET',null,'?order=created_at.desc');
+    DATA.usuarios = rows;
+    renderUsuarios(rows);
+  }catch(e){ document.getElementById('tb-usuarios').innerHTML='<tr><td colspan="6" class="empty">Error al cargar</td></tr>'; }
+}
+
+function renderUsuarios(rows){
+  const tb = document.getElementById('tb-usuarios');
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="6" class="empty">Sin usuarios registrados</td></tr>'; return; }
+  tb.innerHTML = rows.map(u=>{
+    const sname = u.sucursal_id ? (SUCURSALES.find(s=>s.id===u.sucursal_id)||{}).nombre||'—' : 'Todas';
+    const esYo = u.id === SESSION.id;
+    return `<tr>
+      <td>${u.nombre}${esYo?' <span style="font-size:11px;color:var(--text3)">(tú)</span>':''}</td>
+      <td><span class="code">${u.usuario}</span></td>
+      <td><span class="pill ${u.rol}">${u.rol}</span></td>
+      <td><span class="suc-tag">${sname}</span></td>
+      <td><span class="pill ${u.activo?'activo':'inactivo'}">${u.activo?'Activo':'Inactivo'}</span></td>
+      <td>
+        <div class="accion-row">
+          <button class="btn sm" onclick="editUsuario('${u.id}')">Editar</button>
+          ${!esYo?`<button class="btn sm danger" onclick="toggleUsuario('${u.id}',${u.activo})">${u.activo?'Desactivar':'Activar'}</button>`:''}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function editUsuario(id){
+  const u = DATA.usuarios.find(x=>x.id===id);
+  if(!u) return;
+  document.getElementById('m-usuario-title').textContent = 'Editar usuario';
+  document.getElementById('u-id').value     = u.id;
+  document.getElementById('u-nombre').value = u.nombre;
+  document.getElementById('u-user').value   = u.usuario;
+  document.getElementById('u-pass').value   = u.password;
+  document.getElementById('u-rol').value    = u.rol;
+  document.getElementById('u-suc').value    = u.sucursal_id||'';
+  document.getElementById('u-activo').value = String(u.activo);
+  openModal('m-usuario');
+}
+
+async function toggleUsuario(id, activo){
+  if(!confirm(activo ? '¿Desactivar este usuario?' : '¿Activar este usuario?')) return;
+  await db('usuarios','PATCH',{activo:!activo},`?id=eq.${id}`);
+  loadUsuarios();
+}
+
+async function saveUsuario(){
+  const nombre  = document.getElementById('u-nombre').value.trim();
+  const usuario = document.getElementById('u-user').value.trim();
+  const pass    = document.getElementById('u-pass').value;
+  const rol     = document.getElementById('u-rol').value;
+  const sucId   = document.getElementById('u-suc').value || null;
+  const activo  = document.getElementById('u-activo').value === 'true';
+  const uid     = document.getElementById('u-id').value;
+  if(!nombre||!usuario||!pass){ alert('Completa nombre, usuario y contraseña'); return; }
+  const payload = {nombre, usuario, password:pass, rol, sucursal_id:sucId, activo};
+  try{
+    if(uid){
+      await db('usuarios','PATCH',payload,`?id=eq.${uid}`);
+    } else {
+      await db('usuarios','POST',payload);
+    }
+    document.getElementById('u-id').value='';
+    document.getElementById('m-usuario-title').textContent='Nuevo usuario';
+    ['u-nombre','u-user','u-pass'].forEach(id=>document.getElementById(id).value='');
+    closeModal('m-usuario');
+    loadUsuarios();
+  }catch(e){ alert('Error: '+e.message); }
+}
+
+// ── SAVES ─────────────────────────────────────────────
+async function saveVehiculo(){
+  const marca  = document.getElementById('v-marca').value.trim();
+  const modelo = document.getElementById('v-modelo').value.trim();
+  if(!marca||!modelo){ alert('Ingresa marca y modelo'); return; }
+  const code = await nextCode('vehiculos','VEH-');
+  const sucId = SESSION.sucursal_id;
+  await db('vehiculos','POST',{
+    code, marca, modelo,
+    anio:     parseInt(document.getElementById('v-anio').value)||null,
+    color:    document.getElementById('v-color').value,
+    vin:      document.getElementById('v-vin').value,
+    costo:    parseFloat(document.getElementById('v-costo').value)||null,
+    condicion:document.getElementById('v-cond').value,
+    notas:    document.getElementById('v-notas').value,
+    sucursal_id: sucId,
+    estado: 'En patio'
+  });
+  ['v-marca','v-modelo','v-anio','v-color','v-vin','v-costo','v-notas'].forEach(id=>document.getElementById(id).value='');
+  closeModal('m-vehiculo');
+  loadVehiculos(); loadDashboard();
+}
+
+async function saveRefaccion(){
+  const desc = document.getElementById('r-desc').value.trim();
+  if(!desc){ alert('Ingresa una descripción'); return; }
+  const code = await nextCode('refacciones','REF-');
+  await db('refacciones','POST',{
+    code, descripcion:desc,
+    categoria:  document.getElementById('r-cat').value,
+    origen_code:document.getElementById('r-origen').value,
+    ubicacion:  document.getElementById('r-ubic').value,
+    precio:     parseFloat(document.getElementById('r-precio').value)||null,
+    stock:      parseInt(document.getElementById('r-stock').value)||1,
+    estado:     document.getElementById('r-estado').value,
+    sucursal_id:SESSION.sucursal_id
+  });
+  ['r-desc','r-origen','r-ubic','r-precio'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('r-stock').value='1';
+  closeModal('m-refaccion');
+  loadRefacciones(); loadDashboard();
+}
+
+async function saveVenta(){
+  const art   = document.getElementById('vt-art').value.trim();
+  const monto = document.getElementById('vt-monto').value;
+  if(!art||!monto){ alert('Ingresa artículo y monto'); return; }
+  const code = await nextCode('ventas','VTA-');
+  await db('ventas','POST',{
+    code, articulo:art,
+    cliente:     document.getElementById('vt-cli').value,
+    monto:       parseFloat(monto),
+    metodo_pago: document.getElementById('vt-pago').value,
+    notas:       document.getElementById('vt-notas').value,
+    sucursal_id: SESSION.sucursal_id
+  });
+  ['vt-art','vt-cli','vt-monto','vt-notas'].forEach(id=>document.getElementById(id).value='');
+  closeModal('m-venta');
+  loadVentas(); loadDashboard();
+}
+
+async function saveEgreso(){
+  const con   = document.getElementById('eg-con').value.trim();
+  const monto = document.getElementById('eg-monto').value;
+  if(!con||!monto){ alert('Ingresa concepto y monto'); return; }
+  const code = await nextCode('egresos','EGR-');
+  await db('egresos','POST',{
+    code, concepto:con,
+    categoria:   document.getElementById('eg-cat').value,
+    monto:       parseFloat(monto),
+    metodo_pago: document.getElementById('eg-pago').value,
+    notas:       document.getElementById('eg-notas').value,
+    sucursal_id: SESSION.sucursal_id
+  });
+  ['eg-con','eg-monto','eg-notas'].forEach(id=>document.getElementById(id).value='');
+  closeModal('m-egreso');
+  loadEgresos(); loadDashboard();
+}
+
+// ── HELPERS ───────────────────────────────────────────
+async function nextCode(table, prefix){
+  const rows = await db(table,'GET',null,'?select=code');
+  const nums = rows.map(r=>parseInt((r.code||'').split('-')[1])).filter(n=>!isNaN(n));
+  return prefix + pad(nums.length ? Math.max(...nums)+1 : 1);
+}
+
+async function updateNextCode(table, prefix, elId){
+  const rows = await db(table,'GET',null,'?select=code');
+  const nums = rows.map(r=>parseInt((r.code||'').split('-')[1])).filter(n=>!isNaN(n));
+  const el = document.getElementById(elId);
+  if(el) el.textContent = prefix + pad(nums.length ? Math.max(...nums)+1 : 1);
+}
+
+function filterTable(key, q){
+  const lq = q.toLowerCase();
+  const map = {vehiculos:[DATA.vehiculos,renderVehiculos], refacciones:[DATA.refacciones,renderRefacciones],
+               ventas:[DATA.ventas,renderVentas], egresos:[DATA.egresos,renderEgresos], usuarios:[DATA.usuarios,renderUsuarios]};
+  const [rows, render] = map[key]||[];
+  if(rows && render) render(rows.filter(r=>JSON.stringify(r).toLowerCase().includes(lq)));
+}
+
+function openModal(id){
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id){
+  document.getElementById(id).classList.remove('open');
+  if(id==='m-usuario'){
+    document.getElementById('u-id').value='';
+    document.getElementById('m-usuario-title').textContent='Nuevo usuario';
+  }
+}
+document.querySelectorAll('.overlay').forEach(o=>
+  o.addEventListener('click', e=>{ if(e.target===o) o.classList.remove('open'); })
+);
+
+// ── INIT ──────────────────────────────────────────────
+initApp();
+</script>
+</body>
+</html>
